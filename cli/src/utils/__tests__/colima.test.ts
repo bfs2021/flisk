@@ -68,6 +68,14 @@ describe("checkColima", () => {
     expect(status.problem).toBeUndefined();
   });
 
+  it("does not include the closing quote from a logfmt status line", () => {
+    const status = checkColima(
+      deps({ run: () => 'colima is running using qemu\nlevel=info msg="arch: aarch64"\n' }),
+    );
+    expect(status.running).toBe(true);
+    expect(status.arch).toBe("aarch64");
+  });
+
   it("says nothing when Docker does not run on Colima", () => {
     const status = checkColima(
       deps({ env: { DOCKER_HOST: "unix:///var/run/docker.sock" }, exists: () => false }),
