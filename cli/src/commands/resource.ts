@@ -237,12 +237,13 @@ export function assertInfraFramework(type: string, framework: string | undefined
 /**
  * Quote a folder path for a printed next step like `cd <path>`: the reader pastes it into a shell, so a path with a space
  * (`cd a b/c`) would break. Plain paths print exactly as before; anything with characters the shell treats specially gets
- * double quotes, unless it holds a `"`, backtick, `$` or backslash, which a double-quoted string would expand or break on
- * (POSIX single quotes are safe for those). isPathSafe already refused `< > : " | ? *` before this runs.
+ * double quotes, unless it holds a `"`, backtick, `$` or backslash, which a double-quoted string would expand or break on,
+ * or a `!`, which interactive Bash history expansion would break inside double quotes (POSIX single quotes are safe for
+ * those). isPathSafe already refused `< > : " | ? *` before this runs.
  */
 export function quoteNextStepsPath(path: string): string {
   if (/^[A-Za-z0-9_@%+=:,./-]+$/.test(path)) return path;
-  if (!/["`$\\]/.test(path)) return `"${path}"`;
+  if (!/["`$\\!]/.test(path)) return `"${path}"`;
   return `'${path.replace(/'/g, `'\\''`)}'`;
 }
 

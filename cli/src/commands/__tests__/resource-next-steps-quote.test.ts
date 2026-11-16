@@ -99,7 +99,9 @@ describe("resource next steps quote the cd path", () => {
     ]);
     expect(exitCode, logs.join("\n")).toBeUndefined();
     expect(existsSync(join(tempDir, "a b/c", "service.json"))).toBe(true);
-    const cdLines = logs.filter((line) => line.trim().startsWith("cd "));
+    const cdLines = logs
+      .map((line) => line.replace(/\x1b\[[0-9;]*m/g, ""))
+      .filter((line) => line.trim().startsWith("cd "));
     expect(cdLines).toContain('  cd "a b/c"');
     expect(cdLines).not.toContain("  cd a b/c");
   });
@@ -116,8 +118,29 @@ describe("resource next steps quote the cd path", () => {
       "--yes",
     ]);
     expect(exitCode, logs.join("\n")).toBeUndefined();
-    const cdLines = logs.filter((line) => line.trim().startsWith("cd "));
+    const cdLines = logs
+      .map((line) => line.replace(/\x1b\[[0-9;]*m/g, ""))
+      .filter((line) => line.trim().startsWith("cd "));
     expect(cdLines).toContain("  cd services/main/p4");
     expect(cdLines.some((line) => line.includes('"'))).toBe(false);
+  });
+
+  it("quotes a path with a bang in the printed cd step", async () => {
+    const { logs, exitCode } = await runFreshResource([
+      "p5",
+      "--type",
+      "backend",
+      "--stack",
+      "main",
+      "--path",
+      "a b/!missing-event",
+      "--yes",
+    ]);
+    expect(exitCode, logs.join("\n")).toBeUndefined();
+    expect(existsSync(join(tempDir, "a b/!missing-event", "service.json"))).toBe(true);
+    const cdLines = logs
+      .map((line) => line.replace(/\x1b\[[0-9;]*m/g, ""))
+      .filter((line) => line.trim().startsWith("cd "));
+    expect(cdLines).toContain("  cd 'a b/!missing-event'");
   });
 });
